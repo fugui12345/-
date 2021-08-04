@@ -1,0 +1,107 @@
+Django是一个web框架
+
+新建一个web框架工程
+django-admin startproject mysite
+
+__init__    一个将mysite定义为包的空文件
+settings    部署和配置整个工程的配置文件
+urls    url路由的声明文件
+wsgi    基于WSGI的web服务器的配置文件
+manage  一个与django工程进行交互的命令文件
+
+调试运行web框架
+在工程目录下
+    python manage.py runserver
+
+
+创建一个具体应用
+    python manage.py startapp helloapp
+
+Django的MTv开发模式
+    web云端系统提供数据组织和web展示的功能、控制逻辑
+    M Models模型，与数据组织相关的功能，组织和存储数据的方法和模式
+    T Templates模板，与表现相关的所有功能，页面展示风格和方式，与具体数据分离用于定义表现风格
+    V Views视图，针对请求选取数据的功能
+
+云端留言板
+    基本功能定义：
+        提交留言功能：用户设定自己的名字为A，指定任意名字B向B留言，记为msg，留言保存在云端
+        获取留言功能：输入名字A，云端返回10条最新留言记录
+    步骤：
+        新建工程 cloudms
+        新建应用 msgapp
+        增加模板，即显示界面的HTML/CSS/JS代码，配置路径
+        设定url路由，本地路由和全局路由
+        编写交互代码
+        运行工程
+
+Django的URL路由机制
+    setting.py中ROOT_URLCONF = '<工程名称>.urls'指定全局路由文件名称
+    Django使用urlpatterns变量表示路由(urls.py)，该变量是列表类型，由path()或re_path()作为元素组成
+        path处理字符串路由，re_path处理正则表达式路由
+        path(route, view, kwargs=None, name=None)       re_path(route, view)    view对应的处理函数
+            route : url或url模式，django定义的url转换语法
+            view : 处理（视图）函数的名称，或include()类
+            kwargs : 向处理函数提供额外参数，以字典形式表示
+            name : 给url模式的命名
+        django支持三种方式表达route
+            精确字符串格式
+                一个精确url匹配一个操作函数
+                url不以"/"开头,但是结尾以"/"结尾
+            django的转换格式
+                一个url模板，匹配url同时在其中获得一批变量作为参数
+                常用形式，目标是通过url进行参数获取和传递
+                采用<类型：变量名>格式获取参数
+                    str: 匹配除分隔符(/)外的非空字符串，默认类型 <year> 等价于 <str:year>
+                    int: 匹配0和正整数
+                    slug: 匹配字母、数字、横杠、下划线组成的字符串，str的子集
+                    uuid: 匹配格式化的uuid，如:075194d3-6685-417e
+                    path: 匹配任何非空字符串，包括路径分割符，是全集
+            正则表达式格式
+                借助正则表达式丰富语法表达一类url
+                可以通过<>提取变量作为处理函数的参数
+        view的include()函数
+            包含其他路由信息的函数，分段路径组合形成总路径
+
+Django的视图响应类型
+    对路由url的响应，视图函数通过HttpResponse、JsonResponse等类表达并返回响应
+    按约定，视图函数放在对应app中的views.py文件
+        HttpResponse    主要反馈类型，父类，http状态码默认为200
+            (content,content_type=None,status=200,charset=None)
+            content：拟返回的字符串
+            content_type：Mine格式的返回内容类型
+            status：响应状态码
+            charset：返回响应的字符集
+        HttpResponseRedirect    重定向，http状态码为302
+        HttpResponsePermanentRedirect   永久重定向，http状态码为301
+        HttpResponseNotModified     网页无改动，该类型无任何参数，http状态码为304
+        HttpResponseBadRequest      不良响应，http状态码为400
+        HttpResponseForbidden       禁止访问，http状态码为403
+        HttpResponseNotAllowed      不被允许，http状态码为405
+        HttpResponseGone        http状态码为410
+        HttpResponseServerError     服务器错误，http状态码为500
+        HttpResponseNotFound        404错误，http状态码为404
+
+Django的视图流式响应机制
+    HttpResponse类及子类、JsonResponse类  一次性响应
+    StreamHttpResponse类(大文本文件传输)、FileResponse类(大二进制文件传输)   流式响应
+    StreamHttpResponse方式
+        将文件分段，每次传输一部分，分段大小可调
+        利用python迭代器产生分段
+        可以是文件，也可以是任何大规模数据响应
+    FileResponse方式
+        自动分段，自动迭代，适合二进制文件传输
+        Content-Type用于指定文件类型
+        Content-Disposition用于指定下载文件的默认名称        两者是MINE类型标准定义
+
+Django的模板引擎与模板使用
+    模板引擎是模板响应的后端
+
+Django模板语言入门
+    单行注释:  {#这是单行注释#}
+    多行注释： {%comment%}
+                多行注释第一行
+                多行注释第二行
+             {%comment%}
+    变量： {{name}}    如果变量本身是字典类型、列表类型或对象，用.获取元素
+    标签: {% 关键字引导的程序逻辑 %}

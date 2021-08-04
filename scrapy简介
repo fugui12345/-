@@ -1,0 +1,162 @@
+scrapy框架
+- 简介：就是一个继承了很多功能且具有很强通用性的项目模板
+- 学习：学习是框架中集成好各种功能的特性是作用
+- scrapy：一个专门用于异步爬虫的框架
+    - 高性能的数据分析、请求发送持久化储存、全站数据爬取、中间件、分布式……
+
+- 工程的目录结构：
+    - spiders:爬虫文件夹
+        - 必须存放一个爬虫源文件
+        - 创建爬虫源文件：
+            - cd ProName
+            - scrapy genspider spiderName www.xxx.com
+    - settings.py:当前工程的配置文件
+        - 1.禁止robots
+        - 2.指定日志类型: LOG_LEVEL = "ERROR"     只输出错误日志
+        - 3.UA伪装
+    - 执行工程：
+        - scrapy crawl spiderName
+- 持久化储存：
+    - 基于终端指令的持久化存储
+        - 要求：该种方法只可以将parse方法的返回值存储到本地指定后缀的文本文件中
+        - scrapy crawl SpiderName -o filePath
+    - 基于管道的持久化存储（重点）
+        - 在爬虫文件中进行数据解析
+        - 在items.py中定义相关属性
+            - 爬虫文件中解析出了几个字段，就在此定义几个属性
+        - 在爬虫文件中将解析的数据存储封装到Item类型的对象中
+        - 将Item类型的对象交给管道
+        - 在管道文件(pipelines.py)中，接收爬虫文件提交过来的Item类型对象，且对其进行任意形式的持久化储存操作
+        - 在配置文件中开启管道机制
+    - 基于管道实现数据的备份
+        - 将爬取到的数据分别存储到不同的载体
+        - 实现：将数据一份存储到MySQL，一份存储到redis
+        - 一个管道类对用一种形式的持久化储存操作，如果将数据存储到不同的载体中需要使用多个管道类
+- .extract_first()将对象变成文本形式
+        - 已经定义好了管道类，将数据写入到载体中进行存储：
+            - item不会依次提交给管道类：item只会被提交到优先级最高的管道类
+            - 优先级高的管道类需要在process_item中实现return item，就把item传递给下一个即将被执行的管道类
+scrapy手动发送请求爬取全站内容
+    - yield scrapy.Request(url,callback)
+        - callback指定解析函数，用于解析数据
+    - yield scrapy.FormRequest(url, callback, formadata):POST   发送POST请求
+        - formdata:字典，请求参数
+
+- 为什么start_urls列表中的url会被自动进行get请求发送？
+    - 因为列表中的url其实是被start_requests这个父类方法实现的get请求发送
+
+- 如何将start_urls中url默认进行POST请求的发送？
+    - 重写start_requests方法即可
+
+- 如何实现图片的快速保存
+    - item所提交的是我们抓取解析到的图片url地址
+    - 在pipelines中
+        - from scrapy.pipelines.images import ImagesPipeline
+        - 重写三个方法
+            - get_media_requests    重新手动对图片url发起请求
+            - file_path     图片保存名称，记得要传参
+            - item_completed    如不修改内容直接返回return item
+    - setting中重新设置
+        - IMAGES_STORE = './'   设置图片保存的路径
+        - ITEM_PIPELINES重写pipelines的方法调用
+
+
+
+- scrapy的五大核心组件介绍
+- 请求传参实现的深度爬取
+- 中间件机制
+- 大文件下载
+- CrawLSpider
+- 分布式
+- 增量式
+
+五大核心组件：
+- spider， 引擎，下载器， 调度器， 管道
+
+CrawlSpider实现深度爬取
+    - 通用方式：CrawlSpider+spider实现
+
+selenium在scrapy中的使用
+    - https://news.163.com/
+    - 爬取网易新闻中国内，国际，军事，航空，无人机这五个板块的所有新闻数据（标题+内容）
+- 分析
+    - 首页没有动态加载的数据
+        - 爬取五个版块对应的url
+    - 每一个板块对应的页面中的新闻标题是动态加载的
+        - 新闻标题+详情页的url（动态）
+    - 每一条新闻详情页面中的数据不是动态加载
+        - 爬取的是新闻的内容
+分布式
+- 实现方式：scrapy+redis (scrapy结合着scrapy-redis组件)
+- 原生的scrapy框架是无法实现分布式的
+    - 什么是分布式
+        - 需要搭建一个分布式的机群，让机群中的每一台电脑执行同一组程序，让其对同一组资源进行联合且分布的数据爬取
+    - 为什么原生的scrapy框架无法实现分布式？
+        - 调度器无法被分布式机群共享
+        - 管道无法被共享
+    - 如何实现分布式：使用scrapy-redis组件
+    - scrapy-redis组件的作用：
+        - 可以给原生的scrapy框架提供共享的管道和调度器
+        - pip install scrapy-redis
+- 实现流程
+    1.修改爬虫文件
+        - 1.1 导包: from scrapy_redis.spiders import RedisCrawlSpider
+        - 1.2 修改当前爬虫类的父类为: RedisCrawlSpider
+        - 1.3 将start_url替换为redis_key的属性，属性值为任意字符串
+            - redis_key = "xxx"     表示的是可以被共享的调度器队列的名称，最终需要将起始的url手动的放到redis_key表示的队列中
+        - 1.4 将数据解析的操作补充完整
+    2.对setting.py进行配置
+        - 指定调度器
+        - 制定管道
+        - 指定redis
+            # 增加一个去重容器类的配置，作用使用Redis和set集合来存储请求的指纹数据
+            DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+            # 使用scrapu-redis组件自己的调度器
+            SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+            # 配置调度器是否徐亚持久化,实现分布式中的增量式
+            SCHEDULER_PERSIST = True
+        - 指定管道
+            ITEM_PIPELINES = {
+            'scrapy_redis.pipeline.RedisPipeline':400,
+            }
+        - 特点：该种管道只能将item写入redis
+        - 指定redis
+            REDIS_HOST = 'redis服务的ip地址'
+            REDIS_PORT = 6379
+            REDIS_ENCODING = 'utf-8'
+            REDIS_PARAMS = {'password':'123456'}
+    3.配置redis的配置文件（redis.window.conf）
+        - 解除默认绑定
+            - 56行进行注释 # bind 127.0.0.1
+        - 关闭保护模式
+            - 75行   protected-mode no   yes改为no
+    4.启动redis服务和客户端
+    5.执行scrapy工程（不要在配置文件加LOG_LEVEL）
+        - 程序会停留在listing位置：等待起始url加入
+    6.向redis_key表示的队列中添加起始url
+        - 需要在redis的客户端执行如下指令（调度器的队列在redis中）
+        - lpush sunQueue http://wz.sun0769.com/political/index/politicsNewest?id=1&page=1
+
+增量式
+- 概念：监测网站数据更新的情况，以便于爬取到最新更新出来的数据
+- 实现核心：去重
+- 实战中去重的方式：记录表
+    - 记录表需要记录的一定是爬取过的相关信息。
+        - 爬取过的相关信息：将每一部电影详情页的url
+        - 只需要使用某一组数据，改组数据如果可以作为该部电影的唯一标识即可，刚好电影详情页的URL刚好可以作为电影的唯一标识。只要可以表示唯一标识就可以统称为数据指纹。
+- 去重的方式对应的记录表：
+    - python中的set集合（不可以）
+        - 集合无法持久化存储
+    - redis中的set可以的
+        - 可以持久化存储
+    
+
+
+
+
+
+
+
+
+
+
