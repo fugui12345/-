@@ -1,0 +1,118 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <script>
+            // DOM查找
+
+            // 查找节点
+            // 读取节点信息
+            // 修改节点信息
+            // 创建新节点
+
+            // 按id属性查找，精确查找一个元素对象   不是所有元素都有id
+            var elem=document.getElementById("id");
+            // 按标签名查找     可用在任意父元素上  不仅查直接子节点，而且查所有子代节点    返回一个动态合集
+            // parent是一个父元素
+            var elems=parent.getElementsByTagName("tag");
+            // Name属性查找
+            document.getElementsByName("name属性值");
+            // 通过class查找
+            // 查找父元素下指定的class属性的元素
+            var elemss = parent.getElementsByClassName("class");
+
+            // 通过css选择器查找
+            // 只找一个元素     selector支持一切css中的选择器   如返回多个结果只返回第一个
+            var elemm = parent.querySelector("selector");
+            // 找多个元素   返回的是非动态集合
+            var elemms = parent.querySelectorAll("selector");
+
+
+            // DOM修改
+            // DOM标准
+            // 核心DOM，可操作一切结构化文档的API，包括HTMl和XML，繁琐
+            // HTML DOM，专门操作HTML文档的简化版DOMAPI，进行了简化，不万能，但是简单
+
+            // 读取属性值两种
+            // elem是先获取的节点位置
+            // var attrNode = elem.attributes[下标/属性名];
+            // var attrNode = elem.getAttributeNode(属性名);
+
+            // arrNode.value——属性值
+            // 直接获得属性值
+            var value = elem.getAttribute("属性名");
+
+            // 修改属性值
+            var h1 = document.getElementById("id");
+            h1.setAttributeNode("name", value);
+
+            // 判断是否包含指定的属性
+            document.getElementById("id").hasAttribute('onclick');
+
+            // 移除属性
+            elem.removeAttribute("属性名");
+
+
+            // 修改样式
+            // elem.style.属性名
+            // 属性名去掉属性变成大写
+            // css:background-color  =>  backgroundColor
+
+
+            // DOM添加
+            // 1、创建空元素    2、设置关键属性     3、将元素添加到DOM树
+            // 1
+            document.createElement("元素名");
+            // 2
+            // a.innerHTML=""
+            // a.herf="http://"
+            // a.style.cssText=""   多个元素添加
+            // 3
+            parentNode.appendChild(childNode);
+            // 可用于将为一个父元素追加最后一个子节点
+            parentNode.insertBefore(newChild,existingChild)     // new是需要添加的新节点、existing是需要添加在什么位置
+            // 用于在父元素中的指定子节点之前添加一个新的子节点
+            
+            // 创建文档片段
+            var frag = document.createDocumentFragment();
+            frag.append("child");
+            parent.appendChild(frag);   //追加在DOM树中
+
+            // 浏览器对象模型
+            // windows：代表整个窗口
+            // history：封装当前窗口打开后，成功访问过的历史url记录
+            // navigator：封装浏览器配置信息
+            // document：封装当前正在加载的网页内容
+            // location：封装了当前窗口正在打开的url地址
+            // screen：封装了屏幕的信息
+            // event：定义了网页中的事件
+
+            // 完整窗口大小
+            window.outerWidth/outerHeight
+            // 文档显示区大小
+            window.innerHeight/innerWidth
+
+            // 定时器
+            // 1、周期性定时器      让程序按指定时间间隔反复自动执行一项任务
+            // setInterval(exp,time):周期性触发代码exp
+            setInterval(function(){
+                console.log("hellow world");
+            },1000);
+         
+            // 如何停止定时器、
+            var timer = setInterval(function(){
+                console.log("hellow world");
+            },1000);
+            // 停止定时器
+            clearInterval(timer);
+
+            // 2、一次性定时器
+            setTimeout(exp,time);
+            setTimeout(function(){
+                alert("good");
+            },3000);
+            
+        </script>
+    </body>
+</html>
